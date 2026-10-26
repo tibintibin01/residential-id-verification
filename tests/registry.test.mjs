@@ -40,7 +40,7 @@ test('authenticated publication and lookup expose only public whitelist', async 
   assert.equal(body.status, 'active');
   assert.equal(body.maskedName, 'J*** D*** C***');
   assert.ok(!('token' in body) && !('originId' in body) && !('revision' in body));
-  assert.deepEqual(Object.keys(body).sort(), ['status', 'maskedName', 'reference', 'issuedOn', 'validUntil', 'updatedAt', 'publishedAt', 'issuer'].sort());
+  assert.deepEqual(Object.keys(body).sort(), ['status', 'maskedName', 'reference', 'issuedOn', 'validUntil', 'updatedAt', 'publishedAt', 'issuer', 'testRecord'].sort());
   assert.ok(![...memory.values.keys()][0].includes(record().token));
 });
 test('full names and unexpected personal fields are rejected before writing', async () => {

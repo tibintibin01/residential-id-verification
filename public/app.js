@@ -16,6 +16,7 @@ const dateTime = value => value ? new Intl.DateTimeFormat('en-PH', { dateStyle: 
 let controller;
 
 function render(status, record) {
+  if (!demo) $('demo-banner').hidden = record?.testRecord !== true;
   const [icon, label, title, description] = states[status] || states.unavailable;
   $('status-icon').className = `status-icon ${status}`;
   $('status-icon').textContent = icon;
