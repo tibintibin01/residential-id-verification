@@ -1,7 +1,9 @@
+import { setupScanner } from './scanner.mjs';
+
 const $ = id => document.getElementById(id);
-const fragment = location.hash.slice(1);
+let fragment = location.hash.slice(1);
 const demo = new URLSearchParams(location.search).get('demo') === '1';
-const token = /^[a-f0-9]{64}$/.test(fragment) ? fragment : '';
+let token = /^[a-f0-9]{64}$/.test(fragment) ? fragment : '';
 const states = {
   active: ['✓', 'RECORD FOUND', 'Active issuance', 'This issuance record is listed as active in the registry.'],
   expired: ['!', 'VALIDITY ENDED', 'This ID has expired', 'The record exists, but its validity date has passed. Contact the issuing office about renewal.'],
@@ -14,6 +16,7 @@ const states = {
 const date = value => value ? new Intl.DateTimeFormat('en-PH', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' }).format(new Date(value.length === 10 ? value + 'T00:00:00+08:00' : value)) : 'Not recorded';
 const dateTime = value => value ? new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' }).format(new Date(value)) : 'Not recorded';
 let controller;
+let focusNextResult = false;
 
 function render(status, record) {
   if (!demo) $('demo-banner').hidden = record?.testRecord !== true;
@@ -35,24 +38,38 @@ function render(status, record) {
   }
   $('retry').hidden = !token || demo;
   $('retry').disabled = false;
+  $('scan-button-label').textContent = status === 'home' ? 'Scan an ID' : 'Scan another ID';
   $('result').setAttribute('aria-busy', 'false');
+  if (focusNextResult) { focusNextResult = false; $('result-title').focus(); }
 }
 
 async function lookup() {
   controller?.abort();
-  controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  const request = new AbortController();
+  controller = request;
+  const currentToken = token;
+  const timer = setTimeout(() => request.abort(), 12000);
   $('retry').disabled = true;
   $('result').setAttribute('aria-busy', 'true');
+  $('record-details').hidden = true;
+  $('compare-note').hidden = true;
+  $('updated').textContent = '';
+  $('status-icon').className = 'status-icon idle';
+  $('status-icon').textContent = '↗';
+  $('status-label').textContent = 'VERIFICATION SERVICE';
+  $('result-title').textContent = 'Checking this ID';
+  $('result-description').textContent = 'Contacting the verification registry…';
   try {
     const response = await fetch('/api/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }), cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: controller.signal });
+      body: JSON.stringify({ token: currentToken }), cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: request.signal });
+    if (controller !== request) return;
     if (response.status === 404 || response.status === 400) { render('missing'); return; }
     if (!response.ok) throw new Error('unavailable');
     const record = await response.json();
+    if (controller !== request) return;
     if (!['active', 'expired', 'revoked', 'unconfirmed'].includes(record.status)) throw new Error('invalid result');
     render(record.status, record);
-  } catch { render('unavailable'); }
+  } catch { if (controller === request) render('unavailable'); }
   finally { clearTimeout(timer); }
 }
 
@@ -66,6 +83,20 @@ function demoResult(status) {
 }
 
 $('retry').addEventListener('click', lookup);
+setupScanner({ onScan(scannedToken) {
+  focusNextResult = true;
+  if (location.pathname === '/verify' && !location.search) {
+    if (location.hash === `#${scannedToken}`) { token = scannedToken; lookup(); }
+    else location.hash = scannedToken;
+  } else location.assign(`/verify#${scannedToken}`);
+} });
+addEventListener('hashchange', () => {
+  if (demo) return;
+  fragment = location.hash.slice(1);
+  token = /^[a-f0-9]{64}$/.test(fragment) ? fragment : '';
+  if (token) lookup();
+  else { controller?.abort(); controller = undefined; render(fragment ? 'missing' : 'home'); }
+});
 if (demo) {
   $('demo-banner').hidden = false;
   $('demo-controls').hidden = false;

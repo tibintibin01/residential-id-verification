@@ -66,6 +66,31 @@ There are no analytics scripts or third-party fonts. Netlify infrastructure may
 still retain ordinary request metadata according to the project's settings and
 provider policies; do not promise visitors that no network metadata is logged.
 
+## Scan another ID
+
+The result card includes **Scan another ID** beside **Check again**. On the
+home page the same control says **Scan an ID**. It opens a camera dialog only
+after the visitor presses the button. The browser asks for camera permission;
+microphone access is never requested. A QR-photo option is available when the
+camera is unavailable or permission is denied.
+
+Frames and chosen images are decoded on the visitor's device. The decoder is
+either the browser's QR implementation or the self-hosted jsQR 1.4.0 fallback
+(Apache-2.0, license in `public/vendor/`). No image is uploaded and no external
+decoder or CDN is used. The scanner accepts only this site's `/verify#token`
+links, without credentials, query parameters, or other destinations. HTTP
+loopback links are supported only for matching local previews.
+
+The camera stops on close, successful recognition, page hiding/navigation, or
+one minute of inactivity. A late camera permission result after closing is
+immediately stopped. Scanning a second token refreshes the result within the
+page; an older lookup cannot replace the new card's result.
+
+The CSP permits only same-origin scripts plus local blob images/video. The
+Permissions Policy permits the camera for this origin only; microphone and
+geolocation remain disabled. Real phone-camera behavior should be checked on
+the office's target phones; automated camera tests use fictional frames.
+
 ## Lifecycle and limitations
 
 - New records are eligible only after the desktop website setting is explicitly
@@ -88,3 +113,5 @@ provider policies; do not promise visitors that no network metadata is logged.
 - [Netlify Functions](https://docs.netlify.com/build/functions/overview/)
 - [Netlify Blobs](https://docs.netlify.com/build/data-and-storage/netlify-blobs/)
 - [Functions environment variables](https://docs.netlify.com/build/functions/environment-variables/)
+- [Camera access](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+- [jsQR](https://github.com/cozmo/jsQR)
