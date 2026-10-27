@@ -31,6 +31,7 @@ function render(status, record) {
   $('updated').textContent = record ? `Record updated ${dateTime(record.updatedAt)} · Published ${dateTime(record.publishedAt)} (Philippine time)` : '';
   if (record) {
     $('resident-name').textContent = record.maskedName;
+    $('barangay').textContent = record.barangay || 'Not yet available';
     $('reference').textContent = record.reference;
     $('issued-on').textContent = date(record.issuedOn);
     $('valid-until').textContent = date(record.validUntil);
@@ -76,7 +77,7 @@ async function lookup() {
 function demoResult(status) {
   document.querySelectorAll('[data-demo]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.demo === status)));
   render(status, ['missing', 'unavailable'].includes(status) ? undefined : {
-    maskedName: 'J*** D*** C***', reference: 'VRF-DEMO7K4Q9X2A', issuedOn: '2026-10-01',
+    maskedName: 'J*** D*** C***', barangay: 'DINADIAWAN', reference: 'VRF-DEMO7K4Q9X2A', issuedOn: '2026-10-01',
     validUntil: status === 'expired' ? '2025-06-30' : '2028-06-30', updatedAt: '2026-10-26T00:30:00Z',
     publishedAt: '2026-10-26T00:31:00Z', issuer: 'Municipal Treasury Office, Dipaculao',
   });

@@ -27,6 +27,7 @@
         <div class="result-heading"><span id="status-icon" class="status-icon idle" aria-hidden="true">↗</span><p class="eyebrow" id="status-label">VERIFICATION SERVICE</p><h2 id="result-title" tabindex="-1">Checking this ID</h2><p id="result-description">Contacting the verification registry…</p></div>
         <dl id="record-details" class="record-details" hidden>
           <div class="name-field"><dt>Resident name</dt><dd id="resident-name"></dd><span class="privacy-label">Masked for privacy</span></div>
+          <div><dt>Barangay on card</dt><dd id="barangay"></dd></div>
           <div><dt>Verification reference</dt><dd id="reference" class="reference"></dd></div>
           <div class="date-grid"><div><dt>Date issued</dt><dd id="issued-on"></dd></div><div><dt>Valid until</dt><dd id="valid-until"></dd></div></div>
           <div><dt>Issuing office</dt><dd id="issuer"></dd></div>
@@ -38,7 +39,7 @@
     </section>
     <section id="demo-controls" class="demo-controls" hidden aria-label="Fictional verification examples"><span>Preview a result</span><div><button type="button" data-demo="active">Active</button><button type="button" data-demo="expired">Expired</button><button type="button" data-demo="revoked">Revoked</button><button type="button" data-demo="missing">Not found</button><button type="button" data-demo="unavailable">Unavailable</button></div></section>
     <section class="explanation" aria-label="About this check"><div><span class="step">01</span><h3>Scan the card</h3><p>Use the camera on your phone to open the QR link printed on the ID.</p></div><div><span class="step">02</span><h3>Review the result</h3><p>Check the record status and validity. An unavailable service does not mean a card is invalid.</p></div><div><span class="step">03</span><h3>Compare in person</h3><p>The registry confirms an issuance record. It does not establish the identity of the person presenting it.</p></div></section>
-    <details class="privacy"><summary>What information does this page show?</summary><p>Only a masked name, verification reference, issuance and validity dates, issuing office, and record update time. Birth dates, full addresses, TINs, photographs, and emergency contacts are not provided by this service.</p><p>If information needs correction, contact the Municipal Treasury Office through the municipality’s established channels.</p></details>
+    <details class="privacy"><summary>What information does this page show?</summary><p>Only a masked name, barangay recorded on the card, verification reference, issuance and validity dates, issuing office, and record update time. Purok, birth dates, full addresses, TINs, photographs, and emergency contacts are not provided by this service.</p><p>If information needs correction, contact the Municipal Treasury Office through the municipality’s established channels.</p></details>
   </main>
   <dialog id="scanner-dialog" class="scanner-dialog" aria-labelledby="scanner-title" aria-describedby="scanner-description">
     <div class="scanner-heading"><h2 id="scanner-title">Scan another ID</h2><button id="scanner-close" class="scanner-close" type="button" aria-label="Close scanner" autofocus>×</button></div>

@@ -40,7 +40,8 @@ test('authenticated publication and lookup expose only public whitelist', async 
   assert.equal(body.status, 'active');
   assert.equal(body.maskedName, 'J*** D*** C***');
   assert.ok(!('token' in body) && !('originId' in body) && !('revision' in body));
-  assert.deepEqual(Object.keys(body).sort(), ['status', 'maskedName', 'reference', 'issuedOn', 'validUntil', 'updatedAt', 'publishedAt', 'issuer', 'testRecord'].sort());
+  assert.deepEqual(Object.keys(body).sort(), ['status', 'maskedName', 'barangay', 'reference', 'issuedOn', 'validUntil', 'updatedAt', 'publishedAt', 'issuer', 'testRecord'].sort());
+  assert.equal(body.barangay, null);
   assert.ok(![...memory.values.keys()][0].includes(record().token));
 });
 test('full names and unexpected personal fields are rejected before writing', async () => {
@@ -72,6 +73,44 @@ test('same revision cannot silently replace a differing record', async () => {
   await upsert(memory, record());
   assert.equal(await upsert(memory, record()), 'unchanged');
   assert.equal(await upsert(memory, { ...record(), maskedName: 'M***' }), 'conflict');
+});
+
+test('a v1 record can gain its approved barangay without changing the issuance revision or token', async () => {
+  const memory = store();
+  await upsert(memory, record());
+  const enriched = { ...record(), projectionVersion: 2, barangay: 'DINADIAWAN' };
+  assert.equal(await upsert(memory, enriched), 'accepted');
+  assert.equal(await upsert(memory, enriched), 'unchanged');
+  assert.equal(await upsert(memory, record()), 'unchanged');
+  const saved = memory.values.get(keyFor(record().token)).data;
+  assert.equal(saved.barangay, 'DINADIAWAN');
+  assert.equal(saved.revision, 1);
+  assert.equal(publicResult(saved).barangay, 'DINADIAWAN');
+});
+
+test('location enrichment cannot alter other fields, overwrite equal-revision locations, or restore a revocation', async () => {
+  const memory = store();
+  await upsert(memory, record());
+  assert.equal(await upsert(memory, { ...record(), projectionVersion: 2, barangay: 'DINADIAWAN', maskedName: 'X***' }), 'conflict');
+  await upsert(memory, { ...record(), projectionVersion: 2, barangay: 'DINADIAWAN' });
+  assert.equal(await upsert(memory, { ...record(), projectionVersion: 2, barangay: 'LIPIT' }), 'conflict');
+  await upsert(memory, { ...record(), state: 'revoked', revision: 2 });
+  assert.equal(await upsert(memory, { ...record(), state: 'revoked', revision: 2, projectionVersion: 2, barangay: 'DINADIAWAN' }), 'accepted');
+  assert.equal(await upsert(memory, { ...record(), revision: 3, projectionVersion: 2, barangay: 'DINADIAWAN' }), 'conflict');
+  assert.equal(memory.values.get(keyFor(record().token)).data.state, 'revoked');
+});
+
+test('only recognized barangays are public; purok and full addresses remain rejected', async () => {
+  const memory = store();
+  for (const bad of [
+    { ...record(), barangay: 'DINADIAWAN' },
+    { ...record(), projectionVersion: 2, barangay: 'HOUSE 42, STREET ADDRESS' },
+    { ...record(), projectionVersion: 2, barangay: 'DINADIAWAN', purok: '2' },
+    { ...record(), projectionVersion: 2, barangay: 'DINADIAWAN', address: 'PRIVATE ADDRESS' },
+  ]) assert.equal((await api(memory).publish(post('publish', { records: [bad] }))).status, 400);
+  assert.equal(memory.values.size, 0);
+  assert.equal((await api(memory).publish(post('publish', { records: [{ ...record(), projectionVersion: 2, barangay: null }] }))).status, 200);
+  assert.equal(publicResult({ ...record(), projectionVersion: 2, barangay: 'UNRECOGNIZED' }).barangay, null);
 });
 test('conditional writes converge concurrent updates to the newest revision', async () => {
   const memory = store();

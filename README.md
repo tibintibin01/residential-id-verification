@@ -2,10 +2,11 @@
 
 Target: https://residential-id.netlify.app
 
-The mobile verification page shows only masked names, a non-identifying reference,
+The mobile verification page shows only masked names, the barangay recorded on
+the card, a non-identifying reference,
 issuance and validity dates, issuing office, and update/publication dates. There
 is no resident search, public record list, photo, TIN, date of birth, full address,
-or emergency-contact endpoint. This first release has no staff portal or login;
+or emergency-contact endpoint. Purok is not published. This first release has no staff portal or login;
 full records stay in the office application.
 
 ## Preview and test
@@ -90,6 +91,28 @@ The CSP permits only same-origin scripts plus local blob images/video. The
 Permissions Policy permits the camera for this origin only; microphone and
 geolocation remain disabled. Real phone-camera behavior should be checked on
 the office's target phones; automated camera tests use fictional frames.
+
+## Barangay projection upgrade
+
+Publisher 1.1 adds `projectionVersion: 2` and a canonical barangay from the
+desktop's existing Dipaculao barangay list. Unknown values become null; arbitrary
+addresses and purok remain rejected. Existing enrolled rows are republished once
+because their projection digest changes. Their issuance revision and QR token
+are retained.
+
+The registry accepts a same-revision v1-to-v2 enrichment only when every existing
+public business field matches. Equal-version differences still conflict, older
+publication versions cannot erase the enriched location, and a revoked record
+cannot become active. A newer business correction from a legacy publisher can
+temporarily leave barangay unavailable until a v2 publisher republishes that
+revision. This avoids presenting a prior barangay as if it belonged to a newer
+correction.
+
+Deploy the website before installing publisher 1.1 on the designated server.
+The field shows `Not yet available` until its upgraded publisher sends the
+barangay. The client remains compatible at 1.3.30, and existing QR links stay
+valid. The server update package reuses its saved user-protected connection and
+does not start publication until the operator presses Start updated publisher.
 
 ## Lifecycle and limitations
 
